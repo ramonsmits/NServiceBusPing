@@ -1,10 +1,32 @@
 ﻿using NServiceBus;
+using NServiceBus.Logging;
 using System.Configuration;
+using System.Diagnostics;
+using System.Runtime;
 
 public class Program
 {
+    static readonly ILog Log = LogManager.GetLogger<Program>();
+    static bool IsDebug = false;
+
+    [Conditional("DEBUG")]
+    static void SetDebugBuild()
+    {
+        IsDebug = true;
+    }
+
     public static async Task Main(string[] args)
     {
+        SetDebugBuild();
+
+        Log.InfoFormat("                   IsServerGC = {0}", GCSettings.IsServerGC);
+        Log.InfoFormat("                  LatencyMode = {0}", GCSettings.LatencyMode);
+        Log.InfoFormat("LargeObjectHeapCompactionMode = {0}", GCSettings.LargeObjectHeapCompactionMode);
+        Log.InfoFormat("                    OSVersion = {0}", Environment.OSVersion);
+        Log.InfoFormat("                      Version = {0}", Environment.Version);
+        Log.InfoFormat("               Is64BitProcess = {0}", Environment.Is64BitProcess);
+        Log.InfoFormat("                      IsDebug = {0}", IsDebug);
+
         Console.CursorVisible = false;
         var endpointName = args[0];
         var destination = args[1];
