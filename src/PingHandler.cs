@@ -33,6 +33,8 @@ class PingHandler :
 
         Test.Samples.Add(pingLatency.TotalMilliseconds);
 
+        _ = Console.Out.WriteLineAsync($"TotalMilliseconds = {pingLatency.TotalMilliseconds,8:N2}ms");
+
         return Task.CompletedTask;
     }
 }
