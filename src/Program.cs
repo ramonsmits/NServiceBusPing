@@ -33,6 +33,13 @@ public class Program
         var interval = int.Parse(args[2]);
         var count = int.Parse(args[3]);
 
+        Log.InfoFormat("endpointName = {0}", endpointName);
+        Log.InfoFormat(" destination = {0}", destination);
+        Log.InfoFormat("    interval = {0}", interval);
+        Log.InfoFormat("       count = {0}", count);
+
+
+
         var endpointInstance = await CreateEndpontInstance(endpointName);
 
         var test = new PingTest() { EndpointInstance = endpointInstance };
@@ -40,10 +47,11 @@ public class Program
         var cts = new CancellationTokenSource();
         Console.CancelKeyPress += (s, ea) => { ea.Cancel = true; cts.Cancel(); };
 
-        test.Launch(destination, interval, count, cts.Token);
-
         Console.WriteLine("Ctrl+C to quit...");
-        await Task.Delay(Timeout.InfiniteTimeSpan, cts.Token);
+        await test.Run(destination, interval, count, cts.Token);
+
+        // Block to ensure endpoint can still receive message
+        var task = await Task.Delay(Timeout.InfiniteTimeSpan, cts.Token).ContinueWith(t => t, TaskContinuationOptions.ExecuteSynchronously);
 
         await endpointInstance.Stop();
         return;

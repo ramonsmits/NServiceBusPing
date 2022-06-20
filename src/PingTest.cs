@@ -10,7 +10,7 @@ class PingTest
     public TimeSpan Duration { get; set; }
     public int Count = 0;
 
-    public async void Launch(string destination, int intervalms, int numPings, CancellationToken cancellationToken)
+    public async Task Run(string destination, int intervalms, int numPings, CancellationToken cancellationToken)
     {
         var step = TimeSpan.FromMilliseconds(intervalms);
 
@@ -18,29 +18,22 @@ class PingTest
         PingHandler.Test = this;
         Count = 0;
 
-        try
+        var next = DateTime.UtcNow;
+        next = RoundUp(next, step); // Roundup so that the sends are pretty much aligned with the clock
+
+        while (!cancellationToken.IsCancellationRequested)
         {
-            var next = DateTime.UtcNow;
-            next = RoundUp(next, step); // Roundup so that the sends are pretty much aligned with the clock
+            var delay = next - DateTime.UtcNow;
+            if (delay.Ticks > 0) await Task.Delay(delay, cancellationToken);
+            next += step;
 
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                var delay = next - DateTime.UtcNow;
-                if (delay.Ticks > 0) await Task.Delay(delay, cancellationToken);
-                next += step;
+            // Required to form this otherwise the configured "intervalms" value might be missed, important with tiny delays
+            _ = EndpointInstance.Send(destination, new Ping());
 
-                // Required to form this otherwise the configured "intervalms" value might be missed, important with tiny delays
-                _ = EndpointInstance.Send(destination, new Ping());
-
-                if (numPings != 0 && Count > numPings) break;
-            }
-
-            LogResults();
+            if (numPings != 0 && Count > numPings) break;
         }
-        catch (Exception e)
-        {
-            Log.Fatal("Start", e);
-        }
+
+        LogResults();
     }
 
     DateTime RoundUp(DateTime dt, TimeSpan d)
