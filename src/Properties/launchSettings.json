@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "NServiceBusPing": {
+      "commandName": "Project",
+      "commandLineArgs": "test test 50 6000" // 5 minutes
+    }
+  }
+}
