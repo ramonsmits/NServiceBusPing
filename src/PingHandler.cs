@@ -1,9 +1,12 @@
 ﻿using NServiceBus;
+using NServiceBus.Logging;
 
 class PingHandler :
     IHandleMessages<Ping>,
-    IHandleMessages<Pong>
+    IHandleMessages<Pong>,
+    IHandleMessages<Noop>
 {
+    static readonly ILog Log = LogManager.GetLogger<PingHandler>();
     public static PingTest Test { get; set; }
 
     public Task Handle(Ping msg, IMessageHandlerContext context)
@@ -11,8 +14,9 @@ class PingHandler :
         var now = DateTime.UtcNow;
         var sentAt = DateTimeExtensions.ToUtcDateTime(context.MessageHeaders[Headers.TimeSent]);
         var latency = now.Subtract(sentAt).TotalMilliseconds;
-        var response = new Pong { 
-            OriginalSentTime = sentAt, 
+        var response = new Pong
+        {
+            OriginalSentTime = sentAt,
             SendDurationMs = latency
         };
         return context.Reply(response);
@@ -22,10 +26,10 @@ class PingHandler :
     {
         var now = DateTime.UtcNow;
         if (Test is null) return Task.CompletedTask; //From a previous iteration perhaps
-        
-        Interlocked.Increment(ref Test.Count);
-        
-        if (Test.Count < 4) return Task.CompletedTask; //warmup
+
+        var count = Interlocked.Increment(ref Test.Count);
+
+        if (count < 10) return Task.CompletedTask; //warmup
 
         var sentAt = DateTimeExtensions.ToUtcDateTime(context.MessageHeaders[Headers.TimeSent]);
         var pongLatency = now - sentAt;
@@ -33,7 +37,30 @@ class PingHandler :
 
         Test.Samples.Add(pingLatency.TotalMilliseconds);
 
-        _ = Console.Out.WriteLineAsync($"TotalMilliseconds = {pingLatency.TotalMilliseconds,8:N2}ms");
+        return Task.CompletedTask;
+    }
+
+    public Task Handle(Noop message, IMessageHandlerContext context)
+    {
+        var now = DateTime.UtcNow;
+        var sentAt = DateTimeExtensions.ToUtcDateTime(context.MessageHeaders[Headers.TimeSent]);
+        var latency = now - sentAt;
+
+        var count = Interlocked.Increment(ref Test.Count);
+
+        int latencyMs = (int)latency.TotalMilliseconds;
+
+
+        var text = $"#{count,6} {sentAt:O} {latencyMs,5}ms";
+
+        if (latencyMs > 1000)
+            Log.Error(text);
+        else if (latencyMs > 100)
+            Log.Warn(text);
+        else //if (latencyMs > 10)
+            Log.Info(text);
+        //else
+        //    Log.Debug(text);
 
         return Task.CompletedTask;
     }

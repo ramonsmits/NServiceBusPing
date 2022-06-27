@@ -28,7 +28,7 @@ class PingTest
             next += step;
 
             // Required to form this otherwise the configured "intervalms" value might be missed, important with tiny delays
-            _ = EndpointInstance.Send(destination, new Ping());
+            _ = EndpointInstance.Send(destination, new Noop());
 
             if (numPings != 0 && Count > numPings) break;
         }
@@ -50,5 +50,11 @@ class PingTest
         Log.InfoFormat("PingCount: {0}", Count);
         Log.InfoFormat("HistCount: {0}", (int)hist.DataCount);
         Log.InfoFormat("Histogram: {0}", hist.ToString().Replace("(", "\r\n\t("));
+        
+        foreach (var i in PingPongEndpointConfiguration.Samples)
+        {
+            var hist2 = new Histogram(i.Value, 10);
+            Log.InfoFormat("{0} #{1}\n{2}", i.Key, i.Value.Count, hist2.ToString().Replace("(", "\r\n\t("));
+        }
     }
 }

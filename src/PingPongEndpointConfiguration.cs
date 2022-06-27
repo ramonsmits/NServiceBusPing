@@ -6,11 +6,16 @@ class PingPongEndpointConfiguration : EndpointConfiguration
 {
     public static JsonSerializerSettings IgnoreNullJsonSerializerSettings => new JsonSerializerSettings() { NullValueHandling = NullValueHandling.Ignore };
 
-    public PingPongEndpointConfiguration(string endpointName, string connectionstring) : base(endpointName)
+    public static readonly Dictionary<string, List<double>> Samples = new Dictionary<string, List<double>>();
+
+
+    public PingPongEndpointConfiguration(string endpointName, string connectionstring, int concurrencyLimit) : base(endpointName)
     {
         var serialization = this.UseSerialization<NewtonsoftSerializer>();
         serialization.Settings(IgnoreNullJsonSerializerSettings);
 
+        this.LimitMessageProcessingConcurrencyTo(concurrencyLimit);
+        
         this.EnableInstallers();
         this.UsePersistence<InMemoryPersistence>();
         this.SendFailedMessagesTo("error");
@@ -29,14 +34,15 @@ class PingPongEndpointConfiguration : EndpointConfiguration
             {
                 //Critical Time = 00:00:00.0563710
                 //Processing Time = 00:00:00.0295209
-                //foreach (var duration in context.Durations)
-                //{
-                //    duration.Register(
-                //        observer: (ref DurationEvent @event) =>
-                //        {
-                //            durationsLog.InfoFormat("{0} = {1}", duration.Name, @event.Duration);
-                //        });
-                //}
+                foreach (var duration in context.Durations)
+                {
+                    var samples = Samples[duration.Name] = new List<double>();
+                    duration.Register(
+                        observer: (ref DurationEvent @event) =>
+                        {
+                            samples.Add((long)@event.Duration.TotalMilliseconds);
+                        });
+                }
                 //# of msgs pulled from the input queue /sec = Pong, NsbPing, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
                 //# of msgs successfully processed / sec = Pong, NsbPing, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
                 //foreach (var signal in context.Signals)

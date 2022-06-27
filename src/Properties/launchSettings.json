@@ -1,8 +1,8 @@
 {
   "profiles": {
-    "NServiceBusPing": {
+    "PowerTranz.NsbPing": {
       "commandName": "Project",
-      "commandLineArgs": "test test 50 6000" // 5 minutes
+      "commandLineArgs": "test3 test3 100 0"
     }
   }
 }
