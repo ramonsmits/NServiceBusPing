@@ -50,7 +50,6 @@ class PingHandler :
 
         int latencyMs = (int)latency.TotalMilliseconds;
 
-
         var text = $"#{count,6} {sentAt:O} {latencyMs,5}ms";
 
         if (latencyMs > 1000)

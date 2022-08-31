@@ -8,7 +8,6 @@ class PingPongEndpointConfiguration : EndpointConfiguration
 
     public static readonly Dictionary<string, List<double>> Samples = new Dictionary<string, List<double>>();
 
-
     public PingPongEndpointConfiguration(string endpointName, string connectionstring, int concurrencyLimit) : base(endpointName)
     {
         var serialization = this.UseSerialization<NewtonsoftSerializer>();

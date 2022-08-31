@@ -19,7 +19,6 @@ public class Program
     {
         SetDebugBuild();
 
-
         Log.InfoFormat("                   IsServerGC = {0}", GCSettings.IsServerGC);
         Log.InfoFormat("                  LatencyMode = {0}", GCSettings.LatencyMode);
         Log.InfoFormat("LargeObjectHeapCompactionMode = {0}", GCSettings.LargeObjectHeapCompactionMode);
@@ -61,6 +60,4 @@ public class Program
         await endpointInstance.Stop();
         return;
     }
-
 }
-
