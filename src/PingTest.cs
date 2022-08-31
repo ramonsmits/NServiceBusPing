@@ -1,6 +1,7 @@
 ﻿using MathNet.Numerics.Statistics;
 using NServiceBus;
 using NServiceBus.Logging;
+using System.Text;
 
 class PingTest
 {
@@ -41,6 +42,19 @@ class PingTest
         return new DateTime((dt.Ticks + d.Ticks - 1) / d.Ticks * d.Ticks, dt.Kind);
     }
 
+    static string CreateHistogramReport(Histogram instance)
+    {
+        var sb = new StringBuilder();
+        for (int i = 0; i < instance.BucketCount; i++)
+        {
+            var bucket = instance[i];
+            if (bucket.Count > 0)
+                sb.AppendLine($"[{bucket.LowerBound:N} - {bucket.UpperBound:N}] = {bucket.Count:N0}");
+        }
+
+        return sb.ToString();
+    }
+
     public void LogResults()
     {
         if (Samples.Count == 0) { Log.Error("No samples recorded."); return; }
@@ -49,12 +63,12 @@ class PingTest
 
         Log.InfoFormat("PingCount: {0}", Count);
         Log.InfoFormat("HistCount: {0}", (int)hist.DataCount);
-        Log.InfoFormat("Histogram: {0}", hist.ToString().Replace("(", "\r\n\t("));
+        Log.InfoFormat("Histogram: {0}", CreateHistogramReport(hist));
         
         foreach (var i in PingPongEndpointConfiguration.Samples)
         {
             var hist2 = new Histogram(i.Value, 10);
-            Log.InfoFormat("{0} #{1}\n{2}", i.Key, i.Value.Count, hist2.ToString().Replace("(", "\r\n\t("));
+            Log.InfoFormat("{0} #{1}\n{2}", i.Key, i.Value.Count, CreateHistogramReport(hist2));
         }
     }
 }
